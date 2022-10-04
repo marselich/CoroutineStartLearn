@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">CoroutineStartLearn</string>
+    <string name="city">City:</string>
+    <string name="temperature">Temperature:</string>
+    <string name="tyumen">Tyumen</string>
+    <string name="value_temperature">17</string>
+    <string name="download">Download</string>
+</resources>
