@@ -8,6 +8,9 @@ import android.os.Looper
 import android.os.Message
 import android.widget.Toast
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import ru.kalievmars.coroutinestartlearn.databinding.ActivityMainBinding
 import kotlin.concurrent.thread
 
@@ -18,66 +21,43 @@ class MainActivity : AppCompatActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
-    private val handler = object : Handler() {
-        override fun handleMessage(msg: Message) { // обработка сообщения
-            super.handleMessage(msg)
-
-            print("MY_MESSAGE $msg")
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
         binding.buttonDownload.setOnClickListener {
-            loadData()
+            lifecycleScope.launch {
+                loadData()
+            }
         }
 
-        handler.sendMessage(Message.obtain(handler, 0, 1))
     }
 
-    private fun loadData() {
+    private suspend fun loadData() {
         binding.progressBar.isVisible = true
         binding.buttonDownload.isEnabled = false
-        loadCity {city ->
-            binding.valueCity.text = city
-            loadTemperature(city) { temp ->
-                binding.valueTemperature.text = temp
-                binding.progressBar.isVisible = false
-                binding.buttonDownload.isEnabled = true
-            }
-        }
+        val city = loadCity()
+        binding.valueCity.text = city
+        val temp = loadTemperature(city)
+        binding.valueTemperature.text = temp
+        binding.progressBar.isVisible = false
+        binding.buttonDownload.isEnabled = true
     }
 
-
-    private fun loadCity(callback: (String) -> Unit) {
-        thread {
-            Looper.prepare()
-            // need create Looper for new thread (in default thread don't use looper except main thread)
-            Handler(Looper.myLooper()!!) // send runnable or message to looper in this thread
-            Thread.sleep(5000)
-            runOnUiThread { // same as Handler(Looper.getMainLooper()).post
-                callback(resources.getString(R.string.tyumen))
-            }
-        }
+    private suspend fun loadCity(): String {
+        delay(5000)
+        return resources.getString(R.string.tyumen)
     }
 
-    private fun loadTemperature(city: String, callback: (String) -> Unit) {
-        thread {
-            runOnUiThread {
-                Toast.makeText(
-                    this,
-                    "Search temperature from $city",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-            Thread.sleep(5000)
-
-            runOnUiThread {
-                callback(resources.getString(R.string.value_temperature))
-            }
-        }
+    private suspend fun loadTemperature(city: String): String {
+        Toast.makeText(
+            this,
+            "Search temperature from $city",
+            Toast.LENGTH_LONG
+        ).show()
+        delay(5000)
+        return resources.getString(R.string.value_temperature)
     }
 
 }
